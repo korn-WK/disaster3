@@ -1,21 +1,25 @@
 <template>
   <v-app>
-    <Sidebar
-      :is-mobile="isMobile"
-      :is-collapsed="isCollapsed"
-      @toggle-rail="toggleSidebarRail"
-      @new-chat="handleNewChat"
-      @report="handleReportEmergency"
-      :language="language"
-    />
+    
     <v-main>
       <v-container fluid class="pa-0 fill-height d-flex home-bg-gradient">
         <v-row no-gutters class="flex-grow-1">
           <v-col class="d-flex flex-column align-center justify-center" style="height: 100vh;">
             <div class="chat-header p-4 text-center w-100">
-              <v-btn variant="outlined" size="small" class="lang-btn premium-btn" @click="toggleLanguage" style="position: absolute; top: 15px; right: 15px;">
-                {{ language.toUpperCase() }}/{{ language === 'th' ? 'EN' : 'TH' }}
-              </v-btn>
+              <div style="position: absolute; top: 15px; right: 15px; display: flex; gap: 8px;">
+                <v-btn 
+                  variant="outlined" 
+                  size="small" 
+                  class="login-btn premium-btn" 
+                  @click="handleLogin"
+                  style="background: #fff; color: #2563eb; border: 1.5px solid #38bdf8; font-weight: 600; border-radius: 8px;"
+                >
+                  เข้าสู่ระบบ
+                </v-btn>
+                <v-btn variant="outlined" size="small" class="lang-btn premium-btn" @click="toggleLanguage">
+                  {{ language.toUpperCase() }}/{{ language === 'th' ? 'EN' : 'TH' }}
+                </v-btn>
+              </div>
             </div>
             <v-card class="pa-6 d-flex flex-column align-center modern-shadow glass-card rounded-xl fade-in responsive-card">
               <h1 class="text-center mb-2 report-title responsive-title" style="color:#2563eb;">{{ t('reportTitle') }}</h1>
@@ -153,6 +157,10 @@ function handleNewChat() {
 
 function handleReportEmergency() {
   router.push('/chatbot')
+}
+
+function handleLogin() {
+  router.push('/login')
 }
 
 function getLocation() {
