@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "@mdi/font": "^7.4.47",
+    "@pinecone-database/pinecone": "^6.1.1",
+    "@vueuse/core": "^13.4.0",
+    "vuetify": "^3.8.11",
+    "weaviate-client": "^3.6.2"
+  }
+}
