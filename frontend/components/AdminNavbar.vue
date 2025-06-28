@@ -10,7 +10,7 @@
 import { useRoute } from 'vue-router'
 const $route = useRoute()
 const navItems = [
-  { label: 'Dashboard', to: '/admin/dashboard' },
+  { label: 'Dashboard', to: '/admin' },
   { label: 'ทรัพยากร', to: '/admin/resources' },
   { label: 'แผนที่', to: '/admin/map' },
   { label: 'รายละเอียดเคส', to: '/admin/case/1' },

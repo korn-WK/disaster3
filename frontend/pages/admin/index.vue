@@ -1,5 +1,8 @@
 <template>
   <v-app>
+    <!-- Header Component -->
+    <Header />
+    
     <v-row no-gutters class="fill-height">
       <!-- Chatbot (ซ้าย) -->
       <transition name="slide">
@@ -9,6 +12,11 @@
             <v-avatar size="32" class="mr-2"><v-img src="/robot.png" /></v-avatar>
             <span class="chatbot-title font-weight-bold">DISASTER<br/>CHATBOT</span>
             <v-spacer />
+            <!-- ปุ่มประวัติแชท -->
+            <v-btn icon class="chat-history-btn mr-5" @click="onChatHistory" style="background:transparent;box-shadow:none;margin-right:12px;">
+              <v-icon>mdi-history</v-icon>
+            </v-btn>
+            <!-- ปุ่มย่อหน้าต่าง -->
             <v-btn icon class="chat-collapse-btn no-bg-btn" @click="isChatCollapsed = true" style="background:transparent;box-shadow:none;">
               <v-img src="/menu.png" width="28" height="28" />
             </v-btn>
@@ -23,13 +31,6 @@
       </v-btn>
       <!-- Dashboard (ขวา) -->
       <v-col :cols="isChatCollapsed ? 12 : 8" class="pa-8" style="background:#fff;">
-        <!-- ขวาบน: ปุ่มภาษา + โปรไฟล์ -->
-        <div class="d-flex align-center justify-end mb-2" style="min-height:48px;">
-          <v-btn variant="outlined" size="small" class="lang-btn premium-btn mr-2" @click="toggleLanguage">
-            {{ language.toUpperCase() }}/{{ language === 'th' ? 'EN' : 'TH' }}
-          </v-btn>
-          <v-avatar size="36"><v-img src="/robot.png" /></v-avatar>
-        </div>
         <!-- หัวข้อหลัก -->
         <div class="main-title-navbar-wrap mb-6">
           <div class="main-title mb-3">แจ้งเหตุฉุกเฉิน</div>
@@ -105,15 +106,12 @@ import { ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import ChatbotBox from '~/components/ChatbotBox.vue'
 import AdminNavbar from '~/components/AdminNavbar.vue'
+import Header from '~/components/Header.vue'
 
 const isChatCollapsed = ref(false)
 const isMobile = ref(false)
 const language = ref('th')
 const $route = useRoute()
-
-function toggleLanguage() {
-  language.value = language.value === 'th' ? 'en' : 'th'
-}
 
 const cases = ref([
   {
@@ -176,10 +174,18 @@ function caseCardClass(c) {
   if (c.status === 'กำลังดำเนินการ') return 'case-card-inprogress'
   return ''
 }
+
+function onChatHistory() {
+  // TODO: เปิด modal หรือ sidebar ประวัติแชท
+  alert('คลิกดูประวัติแชท (mock)');
+}
 </script>
 
 <style scoped>
-.fill-height { min-height: 100vh; }
+.fill-height { 
+  min-height: calc(100vh - 64px); /* Adjust for header height */
+  padding-top: 64px; /* Add padding for header */
+}
 .main-title-navbar-wrap {
   width: 100%;
   margin-bottom: 32px;
@@ -261,11 +267,11 @@ function caseCardClass(c) {
 .case-time { font-size: 1.08rem; color: #888; }
 .case-sla-text { color: #ef4444; font-size: 1.05rem; font-weight: 600; margin-top: 8px; }
 .gap-2 { gap: 8px; }
-.chatbot-section { background: #f8fafc; min-height: 100vh; border-right: 1.5px solid #e0e7ef55; }
+.chatbot-section { background: #f8fafc; min-height: calc(100vh - 64px); border-right: 1.5px solid #e0e7ef55; }
 .chatbot-header { background: #fff; border-bottom: 1.5px solid #e0e7ef55; border-top-left-radius: 0.75rem; border-top-right-radius: 0.75rem; min-height: 56px; margin-bottom: 22px; }
 .chatbot-title { font-size: 1.12rem; line-height: 1.1; color: #222; }
 .chat-collapse-btn { position: absolute; top: 16px; right: 8px; z-index: 10; }
-.chat-expand-btn { position: fixed; top: 24px; left: 0; z-index: 1001; background: #fff; border-radius: 0 24px 24px 0; box-shadow: 0 2px 8px #2563eb22; }
+.chat-expand-btn { position: fixed; top: 88px; left: 0; z-index: 1001; background: #fff; border-radius: 0 24px 24px 0; box-shadow: 0 2px 8px #2563eb22; }
 .no-bg-btn { background: transparent !important; box-shadow: none !important; border-radius: 0 !important; padding: 0 !important; }
 .slide-enter-active, .slide-leave-active { transition: all 0.3s cubic-bezier(.4,2,.6,1); }
 .slide-enter-from, .slide-leave-to { transform: translateX(-100%); opacity: 0; }

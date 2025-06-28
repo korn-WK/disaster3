@@ -198,23 +198,27 @@
       confirmButtonText: t('confirmReportButton'),
       cancelButtonText: t('cancelReportButton'),
       reverseButtons: true,
-      backdrop: 'rgba(0,0,0,0.5)'
+      confirmButtonColor: '#2563eb',
+      cancelButtonColor: '#6b7280',
     })
   
     if (result.isConfirmed) {
       loading.value = true
       try {
-        const res = await fetch(`${apiBase}/api/report`, {
+        const response = await fetch(`${apiBase}/api/reports`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
           body: JSON.stringify({
             description: description.value,
-            lat: location.value.lat,
-            lng: location.value.lng
+            location: location.value,
+            timestamp: new Date().toISOString()
           })
         })
-        const data = await res.json()
-        if (data.success) {
+  
+        if (response.ok) {
           await Swal.fire({
             icon: 'success',
             title: t('reportSuccessTitle'),
@@ -223,68 +227,60 @@
           })
           description.value = ''
         } else {
-          await Swal.fire(
-            t('reportErrorTitle'),
-            t('reportErrorMessage') + (data.message || 'เกิดข้อผิดพลาดบางอย่าง'),
-            'error'
-          )
+          throw new Error(`HTTP error! status: ${response.status}`)
         }
       } catch (error) {
-        await Swal.fire(
-          t('reportErrorTitle'),
-          t('connectionErrorServer'),
-          'error'
-        )
+        console.error('Error submitting report:', error)
+        await Swal.fire({
+          icon: 'error',
+          title: t('reportErrorTitle'),
+          text: t('connectionErrorServer'),
+          confirmButtonText: language.value === 'th' ? 'ตกลง' : 'OK'
+        })
       } finally {
         loading.value = false
       }
     } else if (result.dismiss === Swal.DismissReason.cancel) {
       await Swal.fire({
-        icon: 'error',
-        title: t('cancel'),
-        text: t('reportCanceled'),
+        icon: 'info',
+        title: t('reportCanceled'),
         confirmButtonText: language.value === 'th' ? 'ตกลง' : 'OK'
       })
     }
   }
   
   function startListening() {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
-    if (!SpeechRecognition) {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
       Swal.fire({
-        icon: 'warning',
+        icon: 'error',
         title: t('reportErrorTitle'),
         text: t('yourBrowserNotSupportVoiceRecognition'),
         confirmButtonText: language.value === 'th' ? 'ตกลง' : 'OK'
       })
       return
     }
-    const recognition = new SpeechRecognition()
-    recognition.lang = language.value === 'th' ? 'th-TH' : 'en-US'
-    recognition.interimResults = true
-    recognition.maxAlternatives = 3
+  
     isListening.value = true
-    let baseDescription = description.value
+  
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+    const recognition = new SpeechRecognition()
+  
+    recognition.lang = language.value === 'th' ? 'th-TH' : 'en-US'
+    recognition.continuous = false
+    recognition.interimResults = false
+  
+    recognition.onstart = () => {
+      console.log('Voice recognition started')
+    }
   
     recognition.onresult = (event) => {
-      let interimTranscript = ''
-      let finalTranscript = ''
-      for (let i = event.resultIndex; i < event.results.length; ++i) {
-        const transcript = event.results[i][0].transcript
-        if (event.results[i].isFinal) {
-          finalTranscript += transcript
-        } else {
-          interimTranscript += transcript
-        }
-      }
-      if (finalTranscript) {
-        baseDescription = (baseDescription + ' ' + finalTranscript).trim()
-        description.value = baseDescription
-      } else {
-        description.value = (baseDescription + ' ' + interimTranscript).trim()
-      }
+      const transcript = event.results[0][0].transcript
+      description.value = transcript
+      isListening.value = false
     }
+  
     recognition.onerror = (event) => {
+      console.error('Speech recognition error:', event.error)
       Swal.fire({
         icon: 'error',
         title: t('reportErrorTitle'),
@@ -293,10 +289,11 @@
       })
       isListening.value = false
     }
+  
     recognition.onend = () => {
       isListening.value = false
-      if (description.value.trim()) handleSubmit()
     }
+  
     recognition.start()
   }
   
@@ -306,105 +303,109 @@
   </script>
   
   <style scoped>
-  .home-bg-gradient {
-    background: linear-gradient(135deg, #e3f0ff 0%, #e0ecff 50%, #b6d0f7 100%);
+  .fill-height {
+    min-height: calc(100vh - 64px);
     padding-top: 64px;
+  }
+  
+  .home-bg-gradient {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     min-height: calc(100vh - 64px);
   }
+  
+  .modern-shadow {
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  }
+  
+  .glass-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  .fade-in {
+    animation: fadeIn 0.6s ease-in-out;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
   .responsive-card {
     width: 100%;
-    max-width: 98vw;
-    margin: 3vw auto 3vw auto;
-    padding: 0 2vw;
-    box-sizing: border-box;
+    max-width: 600px;
   }
-  @media (min-width: 900px) {
-    .responsive-card {
-      max-width: 1400px;
-      padding: 2.2rem 2.5rem 2rem 2.5rem !important;
-      margin: 0 auto 32px auto;
-    }
+  
+  .responsive-title {
+    font-size: clamp(1.5rem, 4vw, 2.5rem);
   }
-  @media (max-width: 600px) {
-    .responsive-card {
-      max-width: 420px;
-      padding: 1.2rem 0.7rem 1.5rem 0.7rem !important;
-    }
-    .responsive-title {
-      font-size: 1.35rem !important;
-    }
-    .responsive-desc {
-      font-size: 0.98rem !important;
-    }
-    .responsive-input textarea {
-      font-size: 0.98rem !important;
-      padding: 8px 8px !important;
-    }
+  
+  .responsive-desc {
+    font-size: clamp(0.875rem, 2vw, 1rem);
   }
-  @media (max-width: 400px) {
-    .responsive-card {
-      max-width: 98vw;
-      padding: 0.7rem 0.2rem 1rem 0.2rem !important;
-    }
+  
+  .responsive-input {
+    font-size: clamp(0.875rem, 2vw, 1rem);
   }
-  .modern-shadow {
-    box-shadow: 0 4px 24px 0 #1e3a8a22, 0 1.5px 6px 0 #38bdf822;
+  
+  .modern-input {
+    border-radius: 12px;
+    border: 2px solid #e5e7eb;
+    transition: all 0.3s ease;
   }
-  .glass-card {
-    background: rgba(255,255,255,0.55) !important;
-    backdrop-filter: blur(12px) saturate(180%);
-    -webkit-backdrop-filter: blur(12px) saturate(180%);
-    border: 1.5px solid #e0e7ef33;
+  
+  .modern-input:focus-within {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
   }
-  .glass-input textarea {
-    background: rgba(241,245,249,0.85) !important;
-    border-radius: 12px !important;
-    font-size: 1.08rem;
-    padding: 10px 14px;
-    box-shadow: 0 1px 4px #2563eb11;
-    border: 1.5px solid #e0e7ef33;
+  
+  .glass-input {
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(5px);
   }
-  .rounded-xl {
-    border-radius: 1.25rem !important;
-  }
+  
   .gradient-btn {
-    background: linear-gradient(90deg, #38bdf8 0%, #2563eb 100%) !important;
-    color: #fff !important;
-    border: none !important;
-    transition: box-shadow 0.2s, transform 0.18s;
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    border: none;
+    transition: all 0.3s ease;
   }
-  .premium-btn:hover {
-    box-shadow: 0 2px 12px #2563eb55;
-    filter: brightness(1.08);
-    transform: scale(1.07);
+  
+  .gradient-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(37, 99, 235, 0.3);
   }
-  .description-input textarea {
-    background: #f1f5f9 !important;
-    border-radius: 12px !important;
-    font-size: 1.08rem;
-    padding: 10px 14px;
-    box-shadow: 0 1px 4px #2563eb11;
-  }
-  .lang-btn {
-    background: #fff !important;
-    color: #2563eb !important;
-    border: 1.5px solid #38bdf8 !important;
+  
+  .premium-btn {
     font-weight: 600;
-    letter-spacing: 1px;
-    border-radius: 8px;
+    text-transform: none;
+    border-radius: 12px;
   }
-  .fade-in {
-    animation: fadeIn 0.7s cubic-bezier(.39,.575,.56,1) both;
+  
+  .btn-action {
+    transition: all 0.3s ease;
   }
-  @keyframes fadeIn {
-    0% { opacity: 0; transform: translateY(24px) scale(0.98); }
-    100% { opacity: 1; transform: none; }
+  
+  .btn-action:hover {
+    transform: scale(1.05);
   }
+  
   .input-bar-row {
-    align-items: center;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 16px;
+    padding: 8px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   }
-  .modern-input textarea {
-    min-height: 44px !important;
-    font-size: 1.08rem;
+  
+  @media (max-width: 768px) {
+    .responsive-card {
+      margin: 16px;
+      padding: 24px !important;
+    }
+    
+    .input-bar-row {
+      flex-direction: column;
+      gap: 8px;
+    }
   }
-  </style>
+  </style> 

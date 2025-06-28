@@ -77,15 +77,36 @@
 <script setup>
 import { useRuntimeConfig } from '#app'
 import { ref, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
 const config = useRuntimeConfig()
 const apiBase = config.public.apiBaseUrl
 const route = useRoute()
+const router = useRouter()
 const error = ref(null)
 const oauthStatus = ref(null)
 
 onMounted(async () => {
+  // Check if user is already authenticated
+  try {
+    const response = await fetch(`${apiBase}/auth/me`, {
+      credentials: 'include'
+    })
+    
+    if (response.ok) {
+      const userData = await response.json()
+      // Redirect based on user role
+      if (userData.role === 'admin') {
+        router.push('/admin')
+      } else {
+        router.push('/user')
+      }
+      return
+    }
+  } catch (error) {
+    console.log('User not authenticated, showing login page')
+  }
+  
   // Check for error in URL query params
   if (route.query.error) {
     error.value = route.query.error

@@ -115,80 +115,49 @@ const language = ref('th')
 const profileMenu = ref(false)
 const userProfile = ref(null)
 
-// Function to decode JWT token
-function decodeToken(token) {
+// Get user profile from API
+async function getUserProfile() {
   try {
-    const base64Url = token.split('.')[1]
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
-    const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
-    }).join(''))
-    return JSON.parse(jsonPayload)
-  } catch (error) {
-    console.error('Error decoding token:', error)
-    return null
-  }
-}
-
-// Get user profile from token
-function getUserProfile() {
-  const token = localStorage.getItem('authToken')
-  if (token) {
-    const decodedToken = decodeToken(token)
-    if (decodedToken) {
-      // Fetch user details from API
-      fetchUserDetails(decodedToken.userId)
-    }
-  }
-}
-
-// Fetch user details from API
-async function fetchUserDetails(userId) {
-  try {
-    const token = localStorage.getItem('authToken')
-    if (!token) {
-      console.log('No auth token found')
-      return
-    }
-    
     const response = await fetch(`${apiBase}/auth/me`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      credentials: 'include'
+      credentials: 'include' // Important: include cookies
     })
     
     if (response.ok) {
       const userData = await response.json()
       userProfile.value = userData
       console.log('User profile loaded:', userData)
+    } else if (response.status === 401) {
+      // Try to refresh token
+      const refreshResponse = await fetch(`${apiBase}/auth/refresh`, {
+        method: 'POST',
+        credentials: 'include'
+      })
+      
+      if (refreshResponse.ok) {
+        // Retry getting user profile
+        const retryResponse = await fetch(`${apiBase}/auth/me`, {
+          credentials: 'include'
+        })
+        
+        if (retryResponse.ok) {
+          const userData = await retryResponse.json()
+          userProfile.value = userData
+          console.log('User profile loaded after refresh:', userData)
+        } else {
+          console.error('Failed to get user profile after refresh')
+          router.push('/login')
+        }
+      } else {
+        console.error('Failed to refresh token')
+        router.push('/login')
+      }
     } else {
       console.error('Failed to fetch user details:', response.status, response.statusText)
-      // Fallback: use token data if API fails
-      const decodedToken = decodeToken(token)
-      if (decodedToken) {
-        userProfile.value = {
-          name: decodedToken.name || 'ผู้ใช้',
-          email: decodedToken.email || 'user@example.com',
-          picture: null
-        }
-      }
+      router.push('/login')
     }
   } catch (error) {
     console.error('Error fetching user details:', error)
-    // Fallback: use token data if API fails
-    const token = localStorage.getItem('authToken')
-    if (token) {
-      const decodedToken = decodeToken(token)
-      if (decodedToken) {
-        userProfile.value = {
-          name: decodedToken.name || 'ผู้ใช้',
-          email: decodedToken.email || 'user@example.com',
-          picture: null
-        }
-      }
-    }
+    router.push('/login')
   }
 }
 
@@ -196,9 +165,21 @@ function toggleLanguage() {
   language.value = language.value === 'th' ? 'en' : 'th'
 }
 
-function handleLogout() {
-  // Clear local storage
-  localStorage.removeItem('authToken')
+async function handleLogout() {
+  try {
+    const response = await fetch(`${apiBase}/auth/logout`, {
+      method: 'POST',
+      credentials: 'include'
+    })
+    
+    if (response.ok) {
+      console.log('Logged out successfully')
+    } else {
+      console.error('Logout failed:', response.status)
+    }
+  } catch (error) {
+    console.error('Error during logout:', error)
+  }
   
   // Close menu
   profileMenu.value = false

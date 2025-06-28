@@ -17,8 +17,8 @@
                   เข้าสู่ระบบ
                 </v-btn>
                 <v-btn variant="outlined" size="small" class="lang-btn premium-btn" @click="toggleLanguage">
-                  {{ language.toUpperCase() }}/{{ language === 'th' ? 'EN' : 'TH' }}
-                </v-btn>
+                {{ language.toUpperCase() }}/{{ language === 'th' ? 'EN' : 'TH' }}
+              </v-btn>
               </div>
             </div>
             <v-card class="pa-6 d-flex flex-column align-center modern-shadow glass-card rounded-xl fade-in responsive-card">

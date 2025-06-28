@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
 const session = require('express-session');
+const cookieParser = require('cookie-parser');
 const { passport } = require('./controllers/authController');
 const authRoutes = require('./routes/auth');
 const chatRoutes = require('./routes/chatRoutes');
@@ -55,6 +56,7 @@ app.use(cors({
 app.options('*', cors());
 
 app.use(express.json());
+app.use(cookieParser());
 
 // Session middleware
 app.use(session({
