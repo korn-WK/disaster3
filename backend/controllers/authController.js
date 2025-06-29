@@ -99,7 +99,8 @@ const authController = {
     try {
       if (!req.user) {
         console.error('No user found in request');
-        return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/login?error=no_user`);
+        const frontendUrl = new URL(process.env.FRONTEND_URL || 'http://localhost:3000');
+        return res.redirect(`${frontendUrl.origin}/login?error=no_user`);
       }
       
       // Generate tokens
@@ -128,16 +129,17 @@ const authController = {
       console.log('User role:', req.user.role);
       
       // Redirect to frontend without token in URL
-      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+      const frontendUrl = new URL(process.env.FRONTEND_URL || 'http://localhost:3000');
       const redirectUrl = req.user.role === 'admin' 
-        ? `${frontendUrl}/admin`
-        : `${frontendUrl}/user`;
+        ? `${frontendUrl.origin}/admin`
+        : `${frontendUrl.origin}/user`;
       
       console.log('Redirecting to:', redirectUrl);
       res.redirect(redirectUrl);
     } catch (error) {
       console.error('Error in handleCallback:', error);
-      res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/login?error=token_error`);
+      const frontendUrl = new URL(process.env.FRONTEND_URL || 'http://localhost:3000');
+      res.redirect(`${frontendUrl.origin}/login?error=token_error`);
     }
   },
   

@@ -118,7 +118,13 @@ const userProfile = ref(null)
 // Get user profile from API
 async function getUserProfile() {
   try {
-    const response = await fetch(`${apiBase}/auth/me`, {
+    // Helper function to create proper API URL
+    const createApiUrl = (endpoint) => {
+      const apiUrl = new URL(apiBase);
+      return `${apiUrl.origin}${endpoint}`;
+    };
+    
+    const response = await fetch(createApiUrl('/auth/me'), {
       credentials: 'include' // Important: include cookies
     })
     
@@ -128,14 +134,14 @@ async function getUserProfile() {
       console.log('User profile loaded:', userData)
     } else if (response.status === 401) {
       // Try to refresh token
-      const refreshResponse = await fetch(`${apiBase}/auth/refresh`, {
+      const refreshResponse = await fetch(createApiUrl('/auth/refresh'), {
         method: 'POST',
         credentials: 'include'
       })
       
       if (refreshResponse.ok) {
         // Retry getting user profile
-        const retryResponse = await fetch(`${apiBase}/auth/me`, {
+        const retryResponse = await fetch(createApiUrl('/auth/me'), {
           credentials: 'include'
         })
         
@@ -167,7 +173,13 @@ function toggleLanguage() {
 
 async function handleLogout() {
   try {
-    const response = await fetch(`${apiBase}/auth/logout`, {
+    // Helper function to create proper API URL
+    const createApiUrl = (endpoint) => {
+      const apiUrl = new URL(apiBase);
+      return `${apiUrl.origin}${endpoint}`;
+    };
+    
+    const response = await fetch(createApiUrl('/auth/logout'), {
       method: 'POST',
       credentials: 'include'
     })

@@ -2,6 +2,12 @@ export default defineNuxtRouteMiddleware(async (to) => {
   const config = useRuntimeConfig()
   const apiBase = config.public.apiBaseUrl
   
+  // Helper function to create proper API URL
+  const createApiUrl = (endpoint) => {
+    const apiUrl = new URL(apiBase);
+    return `${apiUrl.origin}${endpoint}`;
+  };
+  
   // Skip auth check for login page and public pages
   if (to.path === '/login' || to.path === '/') {
     return
@@ -9,7 +15,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
   
   try {
     // Check authentication directly
-    const response = await fetch(`${apiBase}/auth/me`, {
+    const response = await fetch(createApiUrl('/auth/me'), {
       credentials: 'include'
     })
     
@@ -35,14 +41,14 @@ export default defineNuxtRouteMiddleware(async (to) => {
       
     } else if (response.status === 401) {
       // Try to refresh token
-      const refreshResponse = await fetch(`${apiBase}/auth/refresh`, {
+      const refreshResponse = await fetch(createApiUrl('/auth/refresh'), {
         method: 'POST',
         credentials: 'include'
       })
       
       if (refreshResponse.ok) {
         // Retry getting user profile
-        const retryResponse = await fetch(`${apiBase}/auth/me`, {
+        const retryResponse = await fetch(createApiUrl('/auth/me'), {
           credentials: 'include'
         })
         

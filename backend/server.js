@@ -9,6 +9,7 @@ const authRoutes = require('./routes/auth');
 const chatRoutes = require('./routes/chatRoutes');
 const reportRoutes = require('./routes/reportRoutes');
 const scrapingRoutes = require('./routes/scrapingRoutes');
+const adminRoutes = require('./routes/adminRoutes');
 
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI;
@@ -77,6 +78,7 @@ app.use('/auth', authRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api', reportRoutes);
 app.use('/api/scraping', scrapingRoutes);
+app.use('/api/admin', adminRoutes);
 
 mongoose.connect(MONGO_URI, {})
   .then(() => {

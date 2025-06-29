@@ -87,31 +87,11 @@ const error = ref(null)
 const oauthStatus = ref(null)
 
 onMounted(async () => {
-  // Check if user is already authenticated
-  try {
-    const response = await fetch(`${apiBase}/auth/me`, {
-      credentials: 'include'
-    })
-    
-    if (response.ok) {
-      const userData = await response.json()
-      // Redirect based on user role
-      if (userData.role === 'admin') {
-        router.push('/admin')
-      } else {
-        router.push('/user')
-      }
-      return
-    }
-  } catch (error) {
-    console.log('User not authenticated, showing login page')
-  }
-  
-  // Check for error in URL query params
+  // Check for error in URL query params first
   if (route.query.error) {
     error.value = route.query.error
   }
-  
+  // ไม่ต้อง fetch /auth/me ที่นี่!
   // Check OAuth configuration status
   await checkOAuthStatus()
 })
@@ -128,7 +108,13 @@ function getErrorMessage(errorCode) {
 
 async function checkOAuthStatus() {
   try {
-    const response = await fetch(`${apiBase}/auth/test`)
+    // Helper function to create proper API URL
+    const createApiUrl = (endpoint) => {
+      const apiUrl = new URL(apiBase);
+      return `${apiUrl.origin}${endpoint}`;
+    };
+    
+    const response = await fetch(createApiUrl('/auth/test'))
     if (response.ok) {
       oauthStatus.value = await response.json()
     }
@@ -138,7 +124,8 @@ async function checkOAuthStatus() {
 }
 
 function loginWithGoogle() {
-  window.location.href = `${apiBase}/auth/google`
+  const apiUrl = new URL(apiBase);
+  window.location.href = `${apiUrl.origin}/auth/google`
 }
 </script>
 

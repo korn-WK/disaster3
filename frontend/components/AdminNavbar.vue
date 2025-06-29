@@ -1,6 +1,6 @@
 <template>
   <div class="admin-navbar-tabs d-flex align-center">
-    <NuxtLink v-for="item in navItems" :key="item.to" :to="item.to" class="admin-navbar-tab" :class="{'active': $route.path === item.to}">
+    <NuxtLink v-for="item in navItems" :key="item.to" :to="item.to" class="admin-navbar-tab" :class="{'active': isActiveRoute(item.to)}">
       {{ item.label }}
     </NuxtLink>
   </div>
@@ -9,11 +9,20 @@
 <script setup>
 import { useRoute } from 'vue-router'
 const $route = useRoute()
+
+// Helper function to check if route is active (including dynamic routes)
+const isActiveRoute = (routePath) => {
+  if (routePath === '/admin/case') {
+    return $route.path.startsWith('/admin/case')
+  }
+  return $route.path === routePath
+}
+
 const navItems = [
   { label: 'Dashboard', to: '/admin' },
   { label: 'ทรัพยากร', to: '/admin/resources' },
   { label: 'แผนที่', to: '/admin/map' },
-  { label: 'รายละเอียดเคส', to: '/admin/case/1' },
+  { label: 'รายละเอียดเคส', to: '/admin/case' },
 ]
 </script>
 

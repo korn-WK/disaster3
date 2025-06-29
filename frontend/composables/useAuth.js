@@ -10,11 +10,17 @@ export const useAuth = () => {
   const isAuthenticated = ref(false)
   const isLoading = ref(false)
 
+  // Helper function to create proper API URL
+  const createApiUrl = (endpoint) => {
+    const apiUrl = new URL(apiBase);
+    return `${apiUrl.origin}${endpoint}`;
+  };
+
   // Check if user is authenticated
   const checkAuth = async () => {
     try {
       isLoading.value = true
-      const response = await fetch(`${apiBase}/auth/me`, {
+      const response = await fetch(createApiUrl('/auth/me'), {
         credentials: 'include'
       })
       
@@ -25,14 +31,14 @@ export const useAuth = () => {
         return { success: true, user: userData }
       } else if (response.status === 401) {
         // Try to refresh token
-        const refreshResponse = await fetch(`${apiBase}/auth/refresh`, {
+        const refreshResponse = await fetch(createApiUrl('/auth/refresh'), {
           method: 'POST',
           credentials: 'include'
         })
         
         if (refreshResponse.ok) {
           // Retry getting user profile
-          const retryResponse = await fetch(`${apiBase}/auth/me`, {
+          const retryResponse = await fetch(createApiUrl('/auth/me'), {
             credentials: 'include'
           })
           
@@ -66,7 +72,7 @@ export const useAuth = () => {
   // Logout user
   const logout = async () => {
     try {
-      const response = await fetch(`${apiBase}/auth/logout`, {
+      const response = await fetch(createApiUrl('/auth/logout'), {
         method: 'POST',
         credentials: 'include'
       })
@@ -99,7 +105,7 @@ export const useAuth = () => {
       
       if (response.status === 401) {
         // Try to refresh token
-        const refreshResponse = await fetch(`${apiBase}/auth/refresh`, {
+        const refreshResponse = await fetch(createApiUrl('/auth/refresh'), {
           method: 'POST',
           credentials: 'include'
         })
